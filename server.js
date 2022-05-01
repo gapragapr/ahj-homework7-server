@@ -2,6 +2,7 @@ const http = require('http');
 const Koa = require('koa');
 const koaBody = require('koa-body');
 const koaCors = require('koa-cors');
+const { off } = require('process');
 const uuid = require('uuid')
 
 const app = new Koa();
@@ -53,24 +54,49 @@ function initDate() {
 
 app.use(async (ctx) => {
     const { method, id, status } = ctx.request.query;
-    const { editId, name, description } = ctx.request.body;
-    let item;
+    const {name, description} = ctx.request.body;
 
-    console.log(ctx.request.query)
-
+    console.log(method, id)
     switch (method) {
         case 'allTickets':
-            ctx.response.body = tickets;
+            ctx.response.body = JSON.stringify(tickets);
             return;
         case `ticketById`:
             const ticket = tickets.filter((item) => item.id === id);
-            ctx.response.body = ticket[0].description;
+            if (ticket) ctx.response.body = JSON.stringify(ticket.description);
             return;
         case 'createTicket':
-            const {name, description} = ctx.request.body
-            tickets.push(new TicketFull(name, description));
-            ctx.response.body = tickets
+            if (!name == ''){
+                tickets.push(new TicketFull(name, description));
+                ctx.response.body = JSON.stringify(tickets)
+                return
+            } else {
+                ctx.response.status = 404;
+                return
+            }
+        case 'deleteTicket':
+            const index = tickets.findIndex(item => item.id == id);
+                if (index !== -1){
+                    ctx.response.body = JSON.stringify(tickets.splice(index, 1))
+                }
             return
+        case 'ticketDone':
+            const donedTicket = tickets.findIndex(item => item.id == id);
+                if (donedTicket !== -1){
+                    if (!tickets[donedTicket].status == true){
+                        tickets[donedTicket].status = true;
+                    } else{
+                        tickets[donedTicket].status = false;
+                    }
+                    ctx.response.body = JSON.stringify(tickets)
+                }
+        case 'editTicket':
+            const editedTicket = tickets.findIndex(item => item.id == id);
+                if(editedTicket !== -1){
+                    tickets[editedTicket].name = name;
+                    tickets[editedTicket].description = description;
+                }
+                ctx.response.body = JSON.stringify(tickets)
         // TODO: обработка остальных методов
         default:
             ctx.response.status = 404
