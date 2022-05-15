@@ -42,14 +42,21 @@ class TicketFull {
     }
   }
 
-function initDate() {
+  function initDate() {
     const date = new Date();
     const day = date.getDate();
     const month = date.getMonth();
     const year = date.getFullYear().toString().slice(2);
     const hours = date.getHours();
     const minutes = date.getMinutes();
-    return `${day < 10 ? '0' : ''}${day}.${month < 10 ? '0' : ''}${month}.${year} ${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+
+    const resultDay = `${day < 10 ? '0' : ''}${day}.`;
+    const resultMonth = `${month < 10 ? '0' : ''}${month}.`;
+    const resultYear = `${year} ${hours < 10 ? '0' : ''}`;
+    const resultTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`
+
+    const result = resultDay + resultMonth + resultYear + resultTime;
+    return result;
 }
 
 app.use(async (ctx) => {
@@ -69,11 +76,10 @@ app.use(async (ctx) => {
             if (!name == ''){
                 tickets.push(new TicketFull(name, description));
                 ctx.response.body = JSON.stringify(tickets)
-                return
             } else {
                 ctx.response.status = 404;
-                return
             }
+            return
         case 'deleteTicket':
             const index = tickets.findIndex(item => item.id == id);
                 if (index !== -1){
@@ -90,6 +96,7 @@ app.use(async (ctx) => {
                     }
                     ctx.response.body = JSON.stringify(tickets)
                 }
+                return
         case 'editTicket':
             const editedTicket = tickets.findIndex(item => item.id == id);
                 if(editedTicket !== -1){
@@ -97,6 +104,7 @@ app.use(async (ctx) => {
                     tickets[editedTicket].description = description;
                 }
                 ctx.response.body = JSON.stringify(tickets)
+                return
         // TODO: обработка остальных методов
         default:
             ctx.response.status = 404
